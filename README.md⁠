@@ -1,0 +1,17 @@
+# 河童保護プロジェクト (Kappa Protection Project)
+
+絶滅の危機に瀕する河童を本気で保護・育成する放置型Webクリッカーゲームです。
+
+## 公開方法 (GitHub Pages)
+
+1. このリポジトリを作成し、すべてのファイル（`index.html`, `style.css`, `script.js`）をコミットします。
+2. GitHubのリポジトリ設定 (Settings) に移動します。
+3. 左メニューの **Pages** を選択します。
+4. **Build and deployment** の Source を `Deploy from a branch` に設定します。
+5. Branch を `main` (または `master`) の `/ (root)` に設定し、**Save** を押します。
+6. 数分後、発行されたURLにアクセスするとゲームがプレイできます。
+
+## 今後の拡張予定
+- [ ] 河童図鑑の実装
+- [ ] 期間限定イベント・演出追加
+- [ ] 実績システムとBGM機能
