@@ -1,0 +1,244 @@
+/* --- ベーススタイル --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+}
+
+body {
+  font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif;
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* --- ニューステロップ --- */
+.news-container {
+  background-color: #2e7d32;
+  color: #ffffff;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.news-slide-in {
+  animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* --- メインレイアウト --- */
+.game-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 16px;
+  gap: 16px;
+}
+
+/* --- リソース表示 --- */
+.resource-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.resource-card {
+  background: #ffffff;
+  padding: 12px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  border: 2px solid #a5d6a7;
+}
+
+.resource-card .label {
+  display: block;
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.resource-card .value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #1b5e20;
+}
+
+/* --- クリックエリア --- */
+.click-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  min-height: 220px;
+  background: #c8e6c9;
+  border-radius: 16px;
+  border: 3px dashed #81c784;
+}
+
+.big-cucumber-wrapper {
+  position: relative;
+  cursor: pointer;
+  text-align: center;
+}
+
+.big-cucumber {
+  font-size: 6rem;
+  transition: transform 0.05s ease;
+}
+
+.big-cucumber:active {
+  transform: scale(0.9);
+}
+
+.kappa-sprite {
+  font-size: 2rem;
+  position: absolute;
+  bottom: -10px;
+  right: -20px;
+}
+
+/* 跳ねるアニメーション */
+.bounce {
+  animation: bounceAnim 0.3s ease;
+}
+
+@keyframes bounceAnim {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(0); }
+}
+
+/* 浮き出る数字ポロリ演出 */
+.floating-text {
+  position: absolute;
+  color: #2e7d32;
+  font-weight: bold;
+  font-size: 1.4rem;
+  pointer-events: none;
+  animation: floatUp 0.8s ease-out forwards;
+}
+
+@keyframes floatUp {
+  0% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-40px); }
+}
+
+/* --- コントロールパネル --- */
+.sub-menu {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.btn {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  cursor: pointer;
+  min-height: 48px; /* スマホ用タップ領域維持 */
+  transition: background 0.2s;
+}
+
+.secondary-btn {
+  background-color: #a5d6a7;
+  color: #1b5e20;
+}
+
+.secondary-btn:hover {
+  background-color: #81c784;
+}
+
+.danger-btn {
+  background-color: #ef5350;
+  color: white;
+}
+
+.upgrade-section h2 {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.upgrade-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.upgrade-item {
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  border: 1px solid #c8e6c9;
+}
+
+.upgrade-item.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.upgrade-info .name {
+  font-weight: bold;
+  display: block;
+}
+
+.upgrade-info .desc {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.buy-btn {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* --- モーダル --- */
+.modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 16px;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+}
