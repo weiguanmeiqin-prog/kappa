@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>河童保護プロジェクト - クリッカーゲーム</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="news-ticker" class="news-container">
+    <span id="news-text">【速報】全国で河童の保護活動が開始されました。</span>
+  </div>
+
+  <div class="game-container">
+    <header class="resource-header">
+      <div class="resource-card">
+        <span class="label">収穫したきゅうり</span>
+        <span id="cucumber-count" class="value">0</span> 本
+      </div>
+      <div class="resource-card">
+        <span class="label">保護中の河童</span>
+        <span id="kappa-count" class="value">0</span> 匹
+      </div>
+    </header>
+
+    <main class="click-area">
+      <div id="click-target" class="big-cucumber-wrapper">
+        <div class="big-cucumber">🥒</div>
+        <div id="kappa-character" class="kappa-sprite">🥒🪷</div>
+      </div>
+    </main>
+
+    <section class="control-panel">
+      <nav class="sub-menu">
+        <button id="zukan-btn" class="btn secondary-btn">📖 河童図鑑</button>
+        <button id="achieve-btn" class="btn secondary-btn">🏆 実績</button>
+        <button id="settings-btn" class="btn secondary-btn">⚙️ 設定</button>
+      </nav>
+
+      <div class="upgrade-section">
+        <h2>保護設備＆アップグレード</h2>
+        <div id="upgrade-list" class="upgrade-list">
+          </div>
+      </div>
+    </section>
+  </div>
+
+  <div id="settings-modal" class="modal hidden">
+    <div class="modal-content">
+      <h3>設定</h3>
+      <p>ゲームの進行状況は自動的に保存されます。</p>
+      <button id="reset-btn" class="btn danger-btn">データをリセット</button>
+      <button id="close-settings-btn" class="btn secondary-btn">閉じる</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
