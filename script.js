@@ -1,5 +1,5 @@
 /**
- * 河童保護プロジェクト v2.0 - メインスクリプト
+ * 河童保護プロジェクト v2.0 - メインスクリプト（モーダル動作改善版）
  */
 
 // --- 1. ゲーム状態管理（セーブデータ構造） ---
@@ -177,22 +177,30 @@ function setupEventListeners() {
     openModal("settings-modal");
   });
 
-  // モーダルクローズボタン（確実動作版に修正）
+  // --- 【ここを徹底修正】モーダル閉じる処理 ---
+  
+  // 1. ❌ボタンをクリックした時の処理
   document.querySelectorAll(".close-modal-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
-      const targetId = e.currentTarget.dataset.target;
+      e.stopPropagation(); // 背景クリックイベントとの重複を防止
+      const targetId = btn.getAttribute("data-target");
       if (targetId) {
         closeModal(targetId);
       }
     });
   });
 
-  // モーダル背景クリックでも閉じられる処理
+  // 2. モーダルのコンテンツ部分（白いウィンドウ）をクリックしても背景に伝播しないようにする
+  document.querySelectorAll(".modal-content").forEach(content => {
+    content.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+  });
+
+  // 3. モーダルの背景（設定画面などの「外側」の暗いエリア）をクリックしたら閉じる処理
   document.querySelectorAll(".modal").forEach(modal => {
-    modal.addEventListener("click", (e) => {
-      if (e.target === modal) {
-        closeModal(modal.id);
-      }
+    modal.addEventListener("click", () => {
+      closeModal(modal.id);
     });
   });
 
