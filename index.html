@@ -35,14 +35,14 @@
 
     <section class="control-panel">
       <nav class="sub-menu">
-        <button id="zukan-btn" class="btn secondary-btn">📖 河童図鑑</button>
-        <button id="achieve-btn" class="btn secondary-btn">🏆 実績</button>
-        <button id="settings-btn" class="btn secondary-btn">⚙️ 設定</button>
+        <button id="zukan-btn" class="btn secondary-btn" type="button">📖 河童図鑑</button>
+        <button id="achieve-btn" class="btn secondary-btn" type="button">🏆 実績</button>
+        <button id="settings-btn" class="btn secondary-btn" type="button">⚙️ 設定</button>
       </nav>
 
       <div class="tab-header">
-        <button id="tab-upgrades-btn" class="tab-btn active">🌱 栽培・設備</button>
-        <button id="tab-protect-btn" class="tab-btn">🪷 河童の保護</button>
+        <button id="tab-upgrades-btn" class="tab-btn active" type="button">🌱 栽培・設備</button>
+        <button id="tab-protect-btn" class="tab-btn" type="button">🪷 河童の保護</button>
       </div>
 
       <div id="tab-upgrades" class="tab-content">
@@ -53,7 +53,7 @@
         <div class="protect-container">
           <p class="protect-desc">きゅうりを消費して、野生で衰弱している河童を救出しよう！</p>
           <div id="protect-action-area">
-            <button id="rescue-kappa-btn" class="btn primary-btn pulse">
+            <button id="rescue-kappa-btn" class="btn primary-btn pulse" type="button">
               🪷 河童を救出する (🥒 <span id="rescue-cost">50</span>)
             </button>
           </div>
@@ -63,10 +63,10 @@
   </div>
 
   <div id="zukan-modal" class="modal hidden">
-    <div class="modal-content zukan-content">
+    <div class="modal-content">
       <div class="modal-header">
         <h3>📖 保護河童図鑑</h3>
-        <button class="close-modal-btn" data-target="zukan-modal">✕</button>
+        <button type="button" class="close-modal-btn" data-target="zukan-modal" aria-label="閉じる">✕</button>
       </div>
       <p class="modal-sub">保護条件を満たすと新しい種類の河童が記録されます。</p>
       <div id="zukan-grid" class="zukan-grid"></div>
@@ -77,7 +77,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3>🏆 保護活動の実績</h3>
-        <button class="close-modal-btn" data-target="achieve-modal">✕</button>
+        <button type="button" class="close-modal-btn" data-target="achieve-modal" aria-label="閉じる">✕</button>
       </div>
       <p class="modal-sub">条件を達成して永続ボーナスを獲得しよう！</p>
       <div id="achieve-list" class="achieve-list"></div>
@@ -88,7 +88,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <h3>⚙️ ゲーム設定</h3>
-        <button class="close-modal-btn" data-target="settings-modal">✕</button>
+        <button type="button" class="close-modal-btn" data-target="settings-modal" aria-label="閉じる">✕</button>
       </div>
       <div class="settings-body">
         <div class="setting-item">
@@ -104,8 +104,8 @@
         </div>
         <hr class="divider">
         <p class="danger-zone-title">⚠️ セーブデータ管理</p>
-        <button id="export-save-btn" class="btn secondary-btn">データを手動保存</button>
-        <button id="reset-btn" class="btn danger-btn">データを完全にリセット</button>
+        <button id="export-save-btn" class="btn secondary-btn" type="button">データを手動保存</button>
+        <button id="reset-btn" class="btn danger-btn" type="button">データを完全にリセット</button>
       </div>
     </div>
   </div>
