@@ -1,8 +1,8 @@
 /**
- * 河童保護プロジェクト v2.0 - メインスクリプト（完全動作統合版）
+ * 河童保護プロジェクト v2.0 - 安定動作版
  */
 
-// --- 1. ゲーム状態管理 ---
+// 1. ゲーム状態
 const gameState = {
   cucumbers: 0,
   totalCucumbers: 0,
@@ -29,7 +29,7 @@ const gameState = {
   unlockedAchievements: []
 };
 
-// --- 2. 各種マスターデータ ---
+// 2. マスタデータ
 const zukanData = [
   { id: "normal", name: "ノーマル河童", icon: "🥒🪷", reqKappas: 0, desc: "一般的な河童。きゅうりが大好物。" },
   { id: "volunteer", name: "お手伝い河童", icon: "🧢🥒", reqKappas: 5, desc: "人間のお手伝いをするのが好きな心優しい河童。" },
@@ -51,36 +51,18 @@ const newsList = [
   "【保護区】「もっときゅうりを！」保護された河童たちが元気にアピール。"
 ];
 
-// --- 3. DOM要素 ---
-const cucumberCountEl = document.getElementById("cucumber-count");
-const kappaCountEl = document.getElementById("kappa-count");
-const clickTargetEl = document.getElementById("click-target");
-const kappaSpriteEl = document.getElementById("kappa-character");
-const upgradeListEl = document.getElementById("upgrade-list");
-const rescueKappaBtn = document.getElementById("rescue-kappa-btn");
-const rescueCostEl = document.getElementById("rescue-cost");
-
-const comboDisplayEl = document.getElementById("combo-display");
-const comboCountEl = document.getElementById("combo-count");
-const newsTextEl = document.getElementById("news-text");
-const newsTickerEl = document.getElementById("news-ticker");
-
-const tabUpgradesBtn = document.getElementById("tab-upgrades-btn");
-const tabProtectBtn = document.getElementById("tab-protect-btn");
-const tabTrapBtn = document.getElementById("tab-trap-btn");
-
-const tabUpgradesContent = document.getElementById("tab-upgrades");
-const tabProtectContent = document.getElementById("tab-protect");
-const tabTrapContent = document.getElementById("tab-trap");
-
-const zukanGridEl = document.getElementById("zukan-grid");
-const achieveListEl = document.getElementById("achieve-list");
-const effectToggleEl = document.getElementById("effect-toggle");
-
 let combo = 1;
 let comboTimer = null;
 
-// --- 4. 初期化 ---
+// DOMの読み込みが完全に完了してから初期化を実行する
+document.addEventListener("DOMContentLoaded", () => {
+  try {
+    init();
+  } catch (err) {
+    console.error("初期化中にエラーが発生しました:", err);
+  }
+});
+
 function init() {
   loadGame();
   renderUpgrades();
@@ -94,71 +76,68 @@ function init() {
   setupEventListeners();
 }
 
-// --- 5. イベントリスナー ---
 function setupEventListeners() {
-  // クリック収穫
-  clickTargetEl.addEventListener("click", (e) => {
-    combo++;
-    if (combo > 1) {
-      comboDisplayEl.classList.remove("hidden");
-      comboCountEl.textContent = combo;
-    }
-    clearTimeout(comboTimer);
-    comboTimer = setTimeout(() => {
-      combo = 1;
-      comboDisplayEl.classList.add("hidden");
-    }, 1200);
+  const clickTarget = document.getElementById("click-target");
+  if (clickTarget) {
+    clickTarget.addEventListener("click", (e) => {
+      combo++;
+      const comboDisplay = document.getElementById("combo-display");
+      const comboCount = document.getElementById("combo-count");
+      
+      if (combo > 1 && comboDisplay && comboCount) {
+        comboDisplay.classList.remove("hidden");
+        comboCount.textContent = combo;
+      }
+      clearTimeout(comboTimer);
+      comboTimer = setTimeout(() => {
+        combo = 1;
+        if (comboDisplay) comboDisplay.classList.add("hidden");
+      }, 1200);
 
-    const gain = gameState.clickPower * (1 + (combo - 1) * 0.1);
-    gameState.cucumbers += gain;
-    gameState.totalCucumbers += gain;
+      const gain = gameState.clickPower * (1 + (combo - 1) * 0.1);
+      gameState.cucumbers += gain;
+      gameState.totalCucumbers += gain;
 
-    if (gameState.effectsEnabled) {
-      createFloatingText(e.clientX, e.clientY, `+${Math.floor(gain)}`);
-      triggerKappaBounce();
-    }
-
-    checkAchievements();
-    updateUI();
-  });
-
-  // 救出ボタン
-  rescueKappaBtn.addEventListener("click", () => {
-    if (gameState.cucumbers >= gameState.rescueCost) {
-      gameState.cucumbers -= gameState.rescueCost;
-      gameState.kappas += 1;
-      gameState.rescueCost = Math.floor(gameState.rescueCost * 1.25);
-      rescueCostEl.textContent = gameState.rescueCost;
-
-      if (gameState.effectsEnabled) triggerKappaBounce();
+      if (gameState.effectsEnabled) {
+        createFloatingText(e.clientX, e.clientY, `+${Math.floor(gain)}`);
+        triggerKappaBounce();
+      }
 
       checkAchievements();
       updateUI();
-      saveGame();
-    }
-  });
+    });
+  }
 
-  // タブ切替
-  tabUpgradesBtn.addEventListener("click", () => switchTab("upgrades"));
-  tabProtectBtn.addEventListener("click", () => switchTab("protect"));
-  if (tabTrapBtn) tabTrapBtn.addEventListener("click", () => switchTab("trap"));
+  const rescueBtn = document.getElementById("rescue-kappa-btn");
+  if (rescueBtn) {
+    rescueBtn.addEventListener("click", () => {
+      if (gameState.cucumbers >= gameState.rescueCost) {
+        gameState.cucumbers -= gameState.rescueCost;
+        gameState.kappas += 1;
+        gameState.rescueCost = Math.floor(gameState.rescueCost * 1.25);
+        
+        const rescueCostEl = document.getElementById("rescue-cost");
+        if (rescueCostEl) rescueCostEl.textContent = gameState.rescueCost;
 
-  // モーダルオープン
-  document.getElementById("zukan-btn").addEventListener("click", () => {
-    renderZukan();
-    openModal("zukan-modal");
-  });
+        if (gameState.effectsEnabled) triggerKappaBounce();
 
-  document.getElementById("achieve-btn").addEventListener("click", () => {
-    renderAchievements();
-    openModal("achieve-modal");
-  });
+        checkAchievements();
+        updateUI();
+        saveGame();
+      }
+    });
+  }
 
-  document.getElementById("settings-btn").addEventListener("click", () => {
-    openModal("settings-modal");
-  });
+  // タブ切り替え
+  bindClick("tab-upgrades-btn", () => switchTab("upgrades"));
+  bindClick("tab-protect-btn", () => switchTab("protect"));
+  bindClick("tab-trap-btn", () => switchTab("trap"));
 
-  // モーダル閉じる
+  // モーダル開閉
+  bindClick("zukan-btn", () => { renderZukan(); openModal("zukan-modal"); });
+  bindClick("achieve-btn", () => { renderAchievements(); openModal("achieve-modal"); });
+  bindClick("settings-btn", () => { openModal("settings-modal"); });
+
   document.querySelectorAll(".close-modal-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
       e.stopPropagation();
@@ -175,54 +154,50 @@ function setupEventListeners() {
     modal.addEventListener("click", () => closeModal(modal.id));
   });
 
-  // トラップ関連イベント
-  const setTrapBtn = document.getElementById("set-trap-btn");
-  const checkTrapBtn = document.getElementById("check-trap-btn");
+  // トラップ機能
+  bindClick("set-trap-btn", () => {
+    if (gameState.cucumbers >= gameState.trap.cost && !gameState.trap.isSet) {
+      gameState.cucumbers -= gameState.trap.cost;
+      gameState.trap.isSet = true;
+      gameState.trap.isReady = false;
+      gameState.trap.endTime = Date.now() + gameState.trap.duration * 1000;
 
-  if (setTrapBtn) {
-    setTrapBtn.addEventListener("click", () => {
-      if (gameState.cucumbers >= gameState.trap.cost && !gameState.trap.isSet) {
-        gameState.cucumbers -= gameState.trap.cost;
-        gameState.trap.isSet = true;
-        gameState.trap.isReady = false;
-        gameState.trap.endTime = Date.now() + gameState.trap.duration * 1000;
-
-        updateTrapUI();
-        updateUI();
-        saveGame();
-      }
-    });
-  }
-
-  if (checkTrapBtn) {
-    checkTrapBtn.addEventListener("click", () => {
-      if (gameState.trap.isReady) {
-        const caughtCount = Math.floor(Math.random() * 3) + 1;
-        gameState.kappas += caughtCount;
-        alert(`🎉 罠に仕掛けたきゅうりにつられて、河童を ${caughtCount} 匹捕獲しました！`);
-
-        gameState.trap.isSet = false;
-        gameState.trap.isReady = false;
-
-        checkAchievements();
-        updateTrapUI();
-        updateUI();
-        saveGame();
-      }
-    });
-  }
-
-  // 設定関連
-  effectToggleEl.addEventListener("change", (e) => {
-    gameState.effectsEnabled = e.target.checked;
+      updateTrapUI();
+      updateUI();
+      saveGame();
+    }
   });
 
-  document.getElementById("export-save-btn").addEventListener("click", () => {
+  bindClick("check-trap-btn", () => {
+    if (gameState.trap.isReady) {
+      const caughtCount = Math.floor(Math.random() * 3) + 1;
+      gameState.kappas += caughtCount;
+      alert(`🎉 罠に仕掛けたきゅうりにつられて、河童を ${caughtCount} 匹捕獲しました！`);
+
+      gameState.trap.isSet = false;
+      gameState.trap.isReady = false;
+
+      checkAchievements();
+      updateTrapUI();
+      updateUI();
+      saveGame();
+    }
+  });
+
+  // 設定項目
+  const effectToggle = document.getElementById("effect-toggle");
+  if (effectToggle) {
+    effectToggle.addEventListener("change", (e) => {
+      gameState.effectsEnabled = e.target.checked;
+    });
+  }
+
+  bindClick("export-save-btn", () => {
     saveGame();
     alert("ゲームデータを手動保存しました！");
   });
 
-  document.getElementById("reset-btn").addEventListener("click", () => {
+  bindClick("reset-btn", () => {
     if (confirm("本当にデータをリセットしますか？")) {
       localStorage.removeItem("kappaProjectSaveV2");
       location.reload();
@@ -230,18 +205,23 @@ function setupEventListeners() {
   });
 }
 
-// --- 6. タブ切り替えヘルパー ---
-function switchTab(tabName) {
-  tabUpgradesBtn.classList.toggle("active", tabName === "upgrades");
-  tabProtectBtn.classList.toggle("active", tabName === "protect");
-  if (tabTrapBtn) tabTrapBtn.classList.toggle("active", tabName === "trap");
-
-  tabUpgradesContent.classList.toggle("hidden", tabName !== "upgrades");
-  tabProtectContent.classList.toggle("hidden", tabName !== "protect");
-  if (tabTrapContent) tabTrapContent.classList.toggle("hidden", tabName !== "trap");
+function bindClick(id, callback) {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener("click", callback);
 }
 
-// --- 7. ループ処理 ---
+function switchTab(tabName) {
+  const btnMap = { upgrades: "tab-upgrades-btn", protect: "tab-protect-btn", trap: "tab-trap-btn" };
+  const contentMap = { upgrades: "tab-upgrades", protect: "tab-protect", trap: "tab-trap" };
+
+  Object.keys(btnMap).forEach(key => {
+    const btn = document.getElementById(btnMap[key]);
+    const content = document.getElementById(contentMap[key]);
+    if (btn) btn.classList.toggle("active", key === tabName);
+    if (content) content.classList.toggle("hidden", key !== tabName);
+  });
+}
+
 let lastTick = Date.now();
 function gameLoop() {
   const now = Date.now();
@@ -256,7 +236,6 @@ function gameLoop() {
     updateUI();
   }
 
-  // トラップタイマー計算
   if (gameState.trap && gameState.trap.isSet && !gameState.trap.isReady) {
     const remaining = Math.max(0, Math.ceil((gameState.trap.endTime - Date.now()) / 1000));
     const timerEl = document.getElementById("trap-timer");
@@ -270,10 +249,11 @@ function gameLoop() {
   }
 }
 
-// --- 8. UI更新 ---
 function updateUI() {
-  cucumberCountEl.textContent = Math.floor(gameState.cucumbers).toLocaleString();
-  kappaCountEl.textContent = gameState.kappas.toLocaleString();
+  const cucEl = document.getElementById("cucumber-count");
+  const kapEl = document.getElementById("kappa-count");
+  if (cucEl) cucEl.textContent = Math.floor(gameState.cucumbers).toLocaleString();
+  if (kapEl) kapEl.textContent = gameState.kappas.toLocaleString();
 
   Object.keys(gameState.upgrades).forEach(id => {
     const item = gameState.upgrades[id];
@@ -285,7 +265,8 @@ function updateUI() {
     }
   });
 
-  rescueKappaBtn.disabled = gameState.cucumbers < gameState.rescueCost;
+  const rescueBtn = document.getElementById("rescue-kappa-btn");
+  if (rescueBtn) rescueBtn.disabled = gameState.cucumbers < gameState.rescueCost;
 
   const setTrapBtn = document.getElementById("set-trap-btn");
   if (setTrapBtn && !gameState.trap.isSet) {
@@ -323,13 +304,13 @@ function updateTrapUI() {
   }
 }
 
-// --- 9. アップグレード描画 ---
 function renderUpgrades() {
+  const upgradeListEl = document.getElementById("upgrade-list");
+  if (!upgradeListEl) return;
   upgradeListEl.innerHTML = "";
   
   Object.keys(gameState.upgrades).forEach(id => {
     const item = gameState.upgrades[id];
-    
     const card = document.createElement("div");
     card.className = "upgrade-item";
     card.id = `upgrade-card-${id}`;
@@ -372,8 +353,9 @@ function recalculateStats() {
   gameState.cps = totalCps;
 }
 
-// --- 10. モーダル類 ---
 function renderZukan() {
+  const zukanGridEl = document.getElementById("zukan-grid");
+  if (!zukanGridEl) return;
   zukanGridEl.innerHTML = "";
   zukanData.forEach(item => {
     const isUnlocked = gameState.kappas >= item.reqKappas;
@@ -400,6 +382,8 @@ function checkAchievements() {
 }
 
 function renderAchievements() {
+  const achieveListEl = document.getElementById("achieve-list");
+  if (!achieveListEl) return;
   achieveListEl.innerHTML = "";
   achievementsData.forEach(ach => {
     const isUnlocked = gameState.unlockedAchievements.includes(ach.id);
@@ -432,6 +416,8 @@ function createFloatingText(x, y, text) {
 }
 
 function triggerKappaBounce() {
+  const kappaSpriteEl = document.getElementById("kappa-character");
+  if (!kappaSpriteEl) return;
   kappaSpriteEl.classList.remove("bounce");
   void kappaSpriteEl.offsetWidth;
   kappaSpriteEl.classList.add("bounce");
@@ -443,6 +429,10 @@ function updateNews() {
 }
 
 function showNews(text) {
+  const newsTextEl = document.getElementById("news-text");
+  const newsTickerEl = document.getElementById("news-ticker");
+  if (!newsTextEl || !newsTickerEl) return;
+  
   newsTextEl.textContent = text;
   newsTickerEl.classList.remove("news-slide-in");
   void newsTickerEl.offsetWidth;
@@ -450,14 +440,15 @@ function showNews(text) {
 }
 
 function openModal(id) {
-  document.getElementById(id).classList.remove("hidden");
+  const el = document.getElementById(id);
+  if (el) el.classList.remove("hidden");
 }
 
 function closeModal(id) {
-  document.getElementById(id).classList.add("hidden");
+  const el = document.getElementById(id);
+  if (el) el.classList.add("hidden");
 }
 
-// --- 11. セーブ & ロード ---
 function saveGame() {
   localStorage.setItem("kappaProjectSaveV2", JSON.stringify(gameState));
 }
@@ -487,15 +478,15 @@ function loadGame() {
         gameState.trap = { ...gameState.trap, ...parsed.trap };
       }
 
-      rescueCostEl.textContent = gameState.rescueCost;
-      effectToggleEl.checked = gameState.effectsEnabled;
+      const rescueCostEl = document.getElementById("rescue-cost");
+      if (rescueCostEl) rescueCostEl.textContent = gameState.rescueCost;
+
+      const effectToggle = document.getElementById("effect-toggle");
+      if (effectToggle) effectToggle.checked = gameState.effectsEnabled;
       
       recalculateStats();
     } catch (e) {
-      console.error("ロード失敗:", e);
+      console.error("セーブデータの読み込み失敗:", e);
     }
   }
 }
-
-// ゲーム起動
-init();
