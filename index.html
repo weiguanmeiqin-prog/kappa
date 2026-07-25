@@ -61,6 +61,30 @@
       </div>
     </section>
   </div>
+<div class="tab-header">
+  <button id="tab-upgrades-btn" class="tab-btn active" type="button">🌱 栽培・設備</button>
+  <button id="tab-protect-btn" class="tab-btn" type="button">🪷 河童の保護</button>
+  <button id="tab-trap-btn" class="tab-btn" type="button">🪤 捕獲トラップ</button>
+</div>
+
+<div id="tab-trap" class="tab-content hidden">
+  <div class="trap-container">
+    <p class="trap-desc">特製きゅうりをお仕置き代わりに仕掛けて、野生の河童を誘き寄せよう！</p>
+    
+    <div class="trap-box">
+      <div id="trap-status-icon" class="trap-icon">🧺</div>
+      <div id="trap-status-text" class="trap-status">仕掛け準備完了</div>
+      <div id="trap-timer" class="trap-timer">残り時間: --:--</div>
+      
+      <button id="set-trap-btn" class="btn primary-btn" type="button">
+        🥒 きゅうりを仕掛ける (🥒 <span id="trap-cost">100</span>)
+      </button>
+      <button id="check-trap-btn" class="btn primary-btn pulse hidden" type="button">
+        🎉 罠を引き揚げる！
+      </button>
+    </div>
+  </div>
+</div>
 
   <div id="zukan-modal" class="modal hidden">
     <div class="modal-content">
