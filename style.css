@@ -325,6 +325,7 @@ body {
   padding: 16px;
   z-index: 1000;
   backdrop-filter: blur(2px);
+  cursor: pointer; /* 外側がクリック可能であることを示すカーソル設定 */
 }
 
 .modal-content {
@@ -336,6 +337,7 @@ body {
   max-height: 85vh;
   overflow-y: auto;
   box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  cursor: default; /* ウィンドウ内は通常のカーソルに戻す */
 }
 
 .modal-header {
@@ -350,12 +352,23 @@ body {
 }
 
 .close-modal-btn {
-  background: none;
+  background: #f0f0f0;
   border: none;
   font-size: 1.2rem;
-  color: #888;
+  color: #555;
   cursor: pointer;
-  padding: 4px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  transition: background 0.2s;
+}
+
+.close-modal-btn:hover {
+  background: #e0e0e0;
 }
 
 .modal-sub {
