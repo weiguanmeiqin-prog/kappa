@@ -17,7 +17,6 @@ body {
   overflow-x: hidden;
 }
 
-/* 共通非表示クラス */
 .hidden {
   display: none !important;
 }
@@ -96,7 +95,6 @@ body {
   overflow: hidden;
 }
 
-/* コンボ表示 */
 .combo-badge {
   position: absolute;
   top: 12px;
@@ -111,7 +109,6 @@ body {
   animation: pulse 0.8s infinite alternate;
 }
 
-/* 巨大きゅうりターゲット */
 .big-cucumber-wrapper {
   position: relative;
   cursor: pointer;
@@ -136,7 +133,6 @@ body {
   filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
 }
 
-/* 浮き出るポロリ数字演出 */
 .floating-text {
   position: absolute;
   color: #2e7d32;
@@ -153,7 +149,6 @@ body {
   100% { opacity: 0; transform: translateY(-50px) scale(1); }
 }
 
-/* アニメーション用クラス */
 .bounce {
   animation: bounceAnim 0.3s ease;
 }
@@ -233,10 +228,10 @@ body {
 
 .tab-btn {
   flex: 1;
-  padding: 10px;
+  padding: 10px 4px;
   border: none;
   background: transparent;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: bold;
   color: #666;
   cursor: pointer;
@@ -249,7 +244,7 @@ body {
   border-bottom-color: #2e7d32;
 }
 
-/* --- 8. アップグレード＆保護カード一覧 --- */
+/* --- 8. アップグレード＆保護 --- */
 .upgrade-list {
   display: flex;
   flex-direction: column;
@@ -299,8 +294,7 @@ body {
   cursor: not-allowed;
 }
 
-/* 河童保護フェーズエリア */
-.protect-container {
+.protect-container, .trap-container {
   background: #ffffff;
   padding: 16px;
   border-radius: 12px;
@@ -308,13 +302,40 @@ body {
   text-align: center;
 }
 
-.protect-desc {
+.protect-desc, .trap-desc {
   font-size: 0.85rem;
   color: #555;
   margin-bottom: 12px;
 }
 
-/* --- 9. モーダル（共通ポップアップ） --- */
+.trap-box {
+  background: #f1f8e9;
+  border: 2px dashed #81c784;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.trap-icon {
+  font-size: 3rem;
+}
+
+.trap-status {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #2e7d32;
+}
+
+.trap-timer {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+/* --- 9. モーダル --- */
 .modal {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -325,7 +346,7 @@ body {
   padding: 16px;
   z-index: 1000;
   backdrop-filter: blur(2px);
-  cursor: pointer; /* 外側がクリック可能であることを示すカーソル設定 */
+  cursor: pointer;
 }
 
 .modal-content {
@@ -337,7 +358,7 @@ body {
   max-height: 85vh;
   overflow-y: auto;
   box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  cursor: default; /* ウィンドウ内は通常のカーソルに戻す */
+  cursor: default;
 }
 
 .modal-header {
@@ -377,7 +398,7 @@ body {
   margin-bottom: 12px;
 }
 
-/* --- 10. 図鑑モーダル固有スタイル --- */
+/* --- 10. モーダル内要素 --- */
 .zukan-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
@@ -417,7 +438,6 @@ body {
   line-height: 1.2;
 }
 
-/* --- 11. 実績モーダル固有スタイル --- */
 .achieve-list {
   display: flex;
   flex-direction: column;
@@ -454,7 +474,6 @@ body {
   color: #666;
 }
 
-/* --- 12. 設定モーダル固有スタイル --- */
 .settings-body {
   display: flex;
   flex-direction: column;
@@ -488,7 +507,6 @@ body {
   font-weight: bold;
 }
 
-/* スイッチトグル */
 .switch {
   position: relative;
   display: inline-block;
@@ -526,45 +544,4 @@ input:checked + .slider {
 
 input:checked + .slider:before {
   transform: translateX(20px);
-}
-/* --- 13. 捕獲トラップ固有スタイル --- */
-.trap-container {
-  background: #ffffff;
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid #c8e6c9;
-  text-align: center;
-}
-
-.trap-desc {
-  font-size: 0.85rem;
-  color: #555;
-  margin-bottom: 12px;
-}
-
-.trap-box {
-  background: #f1f8e9;
-  border: 2px dashed #81c784;
-  border-radius: 12px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.trap-icon {
-  font-size: 3rem;
-}
-
-.trap-status {
-  font-weight: bold;
-  font-size: 1rem;
-  color: #2e7d32;
-}
-
-.trap-timer {
-  font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 8px;
 }
