@@ -1,5 +1,5 @@
 /**
- * 河童保護プロジェクト v2.0 - 安定動作版
+ * 河童保護プロジェクト v2.0 - 救出コスト固定（インフレ防止）版
  */
 
 // 1. ゲーム状態
@@ -10,7 +10,7 @@ const gameState = {
   clickPower: 1,
   cps: 0,
   effectsEnabled: true,
-  rescueCost: 50,
+  rescueCost: 50, // 救出コストは50で固定
   
   upgrades: {
     volunteers: { count: 0, cost: 15, cps: 1, name: "ボランティア募集", desc: "河童保護の協力者を呼びかける" },
@@ -108,14 +108,16 @@ function setupEventListeners() {
     });
   }
 
+  // 河童救出ボタン（コストは50で固定・値上げしない）
   const rescueBtn = document.getElementById("rescue-kappa-btn");
   if (rescueBtn) {
     rescueBtn.addEventListener("click", () => {
       if (gameState.cucumbers >= gameState.rescueCost) {
         gameState.cucumbers -= gameState.rescueCost;
         gameState.kappas += 1;
-        gameState.rescueCost = Math.floor(gameState.rescueCost * 1.25);
         
+        // ★値上げ処理を削除しました（常に50本のまま）
+
         const rescueCostEl = document.getElementById("rescue-cost");
         if (rescueCostEl) rescueCostEl.textContent = gameState.rescueCost;
 
@@ -461,7 +463,7 @@ function loadGame() {
       gameState.cucumbers = parsed.cucumbers || 0;
       gameState.totalCucumbers = parsed.totalCucumbers || 0;
       gameState.kappas = parsed.kappas || 0;
-      gameState.rescueCost = parsed.rescueCost || 50;
+      gameState.rescueCost = 50; // ロード時も50で固定
       gameState.effectsEnabled = parsed.effectsEnabled !== undefined ? parsed.effectsEnabled : true;
       gameState.unlockedAchievements = parsed.unlockedAchievements || [];
 
