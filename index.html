@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>河童保護プロジェクト - クリッカーゲーム</title>
+  <title>河童保護プロジェクト v2.0</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -15,16 +15,18 @@
   <div class="game-container">
     <header class="resource-header">
       <div class="resource-card">
-        <span class="label">収穫したきゅうり</span>
+        <span class="label">🥒 収穫したきゅうり</span>
         <span id="cucumber-count" class="value">0</span> 本
       </div>
       <div class="resource-card">
-        <span class="label">保護中の河童</span>
+        <span class="label">🪷 保護中の河童</span>
         <span id="kappa-count" class="value">0</span> 匹
       </div>
     </header>
 
     <main class="click-area">
+      <div id="combo-display" class="combo-badge hidden">COMBO x<span id="combo-count">1</span></div>
+      
       <div id="click-target" class="big-cucumber-wrapper">
         <div class="big-cucumber">🥒</div>
         <div id="kappa-character" class="kappa-sprite">🥒🪷</div>
@@ -38,20 +40,78 @@
         <button id="settings-btn" class="btn secondary-btn">⚙️ 設定</button>
       </nav>
 
-      <div class="upgrade-section">
-        <h2>保護設備＆アップグレード</h2>
+      <div class="tab-header">
+        <button id="tab-upgrades-btn" class="tab-btn active">🌱 栽培・設備</button>
+        <button id="tab-protect-btn" class="tab-btn">🪷 河童の保護</button>
+      </div>
+
+      <div id="tab-upgrades" class="tab-content">
         <div id="upgrade-list" class="upgrade-list">
           </div>
+      </div>
+
+      <div id="tab-protect" class="tab-content hidden">
+        <div class="protect-container">
+          <p class="protect-desc">きゅうりを消費して、野生で衰弱している河童を救出しよう！</p>
+          <div id="protect-action-area">
+            <button id="rescue-kappa-btn" class="btn primary-btn pulse">
+              🪷 河童を救出する (🥒 <span id="rescue-cost">50</span>)
+            </button>
+          </div>
+        </div>
       </div>
     </section>
   </div>
 
+  <div id="zukan-modal" class="modal hidden">
+    <div class="modal-content zukan-content">
+      <div class="modal-header">
+        <h3>📖 保護河童図鑑</h3>
+        <button class="close-modal-btn" data-target="zukan-modal">✕</button>
+      </div>
+      <p class="modal-sub">保護条件を満たすと新しい種類の河童が記録されます。</p>
+      
+      <div id="zukan-grid" class="zukan-grid">
+        </div>
+    </div>
+  </div>
+
+  <div id="achieve-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🏆 保護活動の実績</h3>
+        <button class="close-modal-btn" data-target="achieve-modal">✕</button>
+      </div>
+      <p class="modal-sub">条件を達成して永続ボーナスを獲得しよう！</p>
+      
+      <div id="achieve-list" class="achieve-list">
+        </div>
+    </div>
+  </div>
+
   <div id="settings-modal" class="modal hidden">
     <div class="modal-content">
-      <h3>設定</h3>
-      <p>ゲームの進行状況は自動的に保存されます。</p>
-      <button id="reset-btn" class="btn danger-btn">データをリセット</button>
-      <button id="close-settings-btn" class="btn secondary-btn">閉じる</button>
+      <div class="modal-header">
+        <h3>⚙️ ゲーム設定</h3>
+        <button class="close-modal-btn" data-target="settings-modal">✕</button>
+      </div>
+      <div class="settings-body">
+        <div class="setting-item">
+          <span>自動セーブ</span>
+          <span class="status-badge">有効 (10秒毎)</span>
+        </div>
+        <div class="setting-item">
+          <span>演出（画面揺れなど）</span>
+          <label class="switch">
+            <input type="checkbox" id="effect-toggle" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <hr class="divider">
+        <p class="danger-zone-title">⚠️ セーブデータ管理</p>
+        <button id="export-save-btn" class="btn secondary-btn">データを手動保存</button>
+        <button id="reset-btn" class="btn danger-btn">データを完全にリセット</button>
+      </div>
     </div>
   </div>
 
