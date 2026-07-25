@@ -11,7 +11,19 @@ const gameState = {
   cps: 0,            // 1秒あたりの自動収穫数
   effectsEnabled: true, // 演出ON/OFF
   rescueCost: 50,    // 初回の河童救出コスト
+  const gameState = {
+  // ...既存のプロパティ...
   
+  // 捕獲トラップ機能の状態
+  trap: {
+    isSet: false,         // 罠が仕掛けられているか
+    isReady: false,       // 捕獲完了しているか
+    endTime: 0,           // 完了時刻 (unix timestamp)
+    duration: 30,         // 罠にかかる時間（秒）
+    cost: 100             // トラップ1回のコスト
+  }
+};
+
   // 設備・アップグレード情報
   upgrades: {
     volunteers: { count: 0, cost: 15, cps: 1, name: "ボランティア募集", desc: "河童保護の協力者を呼びかける" },
@@ -116,6 +128,57 @@ function setupEventListeners() {
     const gain = gameState.clickPower * (1 + (combo - 1) * 0.1);
     gameState.cucumbers += gain;
     gameState.totalCucumbers += gain;
+  // タブ切り替え（トラップタブを追加）
+  const tabTrapBtn = document.getElementById("tab-trap-btn");
+  const tabTrapContent = document.getElementById("tab-trap");
+
+  tabTrapBtn.addEventListener("click", () => {
+    // 他のタブを非アクティブ化
+    tabUpgradesBtn.classList.remove("active");
+    tabProtectBtn.classList.remove("active");
+    tabTrapBtn.classList.add("active");
+
+    tabUpgradesContent.classList.add("hidden");
+    tabProtectContent.classList.add("hidden");
+    tabTrapContent.classList.remove("hidden");
+  });
+
+  // トラップを仕掛けるボタン
+  const setTrapBtn = document.getElementById("set-trap-btn");
+  const checkTrapBtn = document.getElementById("check-trap-btn");
+
+  setTrapBtn.addEventListener("click", () => {
+    if (gameState.cucumbers >= gameState.trap.cost && !gameState.trap.isSet) {
+      gameState.cucumbers -= gameState.trap.cost;
+      gameState.trap.isSet = true;
+      gameState.trap.isReady = false;
+      gameState.trap.endTime = Date.now() + gameState.trap.duration * 1000;
+
+      updateTrapUI();
+      updateUI();
+      saveGame();
+    }
+  });
+
+  // 罠を引き揚げるボタン
+  checkTrapBtn.addEventListener("click", () => {
+    if (gameState.trap.isReady) {
+      // 1〜3匹の河童をランダム獲得
+      const caughtCount = Math.floor(Math.random() * 3) + 1;
+      gameState.kappas += caughtCount;
+
+      alert(`🎉 罠に仕掛けたきゅうりにつられて、河童を ${caughtCount} 匹捕獲（保護）しました！`);
+
+      // リセット
+      gameState.trap.isSet = false;
+      gameState.trap.isReady = false;
+
+      checkAchievements();
+      updateTrapUI();
+      updateUI();
+      saveGame();
+    }
+  });
 
     // 演出
     if (gameState.effectsEnabled) {
