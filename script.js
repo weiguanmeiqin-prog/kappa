@@ -1,110 +1,243 @@
 /**
- * 河童保護プロジェクト - メインスクリプト
+ * 河童保護プロジェクト v2.0 - メインスクリプト
  */
 
-// --- ゲーム状態管理 ---
+// --- 1. ゲーム状態管理（セーブデータ構造） ---
 const gameState = {
   cucumbers: 0,
-  kappas: 0,
+  totalCucumbers: 0, // 通算収穫数（実績判定用）
+  kappas: 0,         // 保護中の河童数
   clickPower: 1,
-  cps: 0, // Cucumbers Per Second (1秒あたりの自動収穫数)
+  cps: 0,            // 1秒あたりの自動収穫数
+  effectsEnabled: true, // 演出ON/OFF
+  rescueCost: 50,    // 初回の河童救出コスト
+  
+  // 設備・アップグレード情報
   upgrades: {
     volunteers: { count: 0, cost: 15, cps: 1, name: "ボランティア募集", desc: "河童保護の協力者を呼びかける" },
     field: { count: 0, cost: 100, cps: 5, name: "専用きゅうり畑", desc: "フレッシュなきゅうりを安定供給" },
     sanctuary: { count: 0, cost: 1100, cps: 30, name: "河童保護区の設立", desc: "広大な水辺で河童を大量保護" }
-  }
+  },
+
+  // 解放済み実績ID
+  unlockedAchievements: []
 };
 
-// --- ニューステロップ用データ ---
-const newsList = [
-  "【速報】ご近所で新しい河童の目撃情報がありました。",
-  "【話題】きゅうりの消費量が前年比200%を記録。",
-  "【気象】河童の活動に適した湿潤な天候が続いています。",
-  "【保護区】「もっときゅうりを」河童保護団体が呼びかけ。"
+// --- 2. 各種マスターデータ ---
+
+// 河童図鑑データ
+const zukanData = [
+  { id: "normal", name: "ノーマル河童", icon: "🥒🪷", reqKappas: 0, desc: "一般的な河童。きゅうりが大好物。" },
+  { id: "volunteer", name: "お手伝い河童", icon: "🧢🥒", reqKappas: 5, desc: "人間のお手伝いをするのが好きな心優しい河童。" },
+  { id: "farmer", name: "農家河童", icon: "👨‍🌾🥒", reqKappas: 15, desc: "きゅうり栽培の技術をマスターした職人肌の河童。" },
+  { id: "king", name: "長老河童", icon: "👑🪷", reqKappas: 50, desc: "保護区の長。圧倒的な威厳と経験を併せ持つ。" }
 ];
 
-// --- DOM要素 ---
+// 実績データ
+const achievementsData = [
+  { id: "harvest_100", title: "収穫ビギナー", desc: "通算100本のきゅうりを収穫する", check: () => gameState.totalCucumbers >= 100, icon: "🌱" },
+  { id: "harvest_1000", title: "きゅうりマスター", desc: "通算1,000本のきゅうりを収穫する", check: () => gameState.totalCucumbers >= 1000, icon: "🥒" },
+  { id: "kappa_1", title: "はじめての保護", desc: "河童を1匹救出・保護する", check: () => gameState.kappas >= 1, icon: "🪷" },
+  { id: "kappa_10", title: "河童の守護者", desc: "河童を10匹保護する", check: () => gameState.kappas >= 10, icon: "🛡️" }
+];
+
+// ニュース一覧
+const newsList = [
+  "【速報】全国で河童の保護活動が本格化しています。",
+  "【話題】特製きゅうりの収穫速度が大幅に向上中！",
+  "【気象】河童の活動に適した湿潤な天候が続いています。",
+  "【保護区】「もっときゅうりを！」保護された河童たちが元気にアピール。"
+];
+
+// --- 3. DOM要素取得 ---
 const cucumberCountEl = document.getElementById("cucumber-count");
 const kappaCountEl = document.getElementById("kappa-count");
 const clickTargetEl = document.getElementById("click-target");
 const kappaSpriteEl = document.getElementById("kappa-character");
 const upgradeListEl = document.getElementById("upgrade-list");
+const rescueKappaBtn = document.getElementById("rescue-kappa-btn");
+const rescueCostEl = document.getElementById("rescue-cost");
+
+const comboDisplayEl = document.getElementById("combo-display");
+const comboCountEl = document.getElementById("combo-count");
 const newsTextEl = document.getElementById("news-text");
 const newsTickerEl = document.getElementById("news-ticker");
 
-const settingsBtn = document.getElementById("settings-btn");
-const closeSettingsBtn = document.getElementById("close-settings-btn");
-const resetBtn = document.getElementById("reset-btn");
-const settingsModal = document.getElementById("settings-modal");
+// タブ関連
+const tabUpgradesBtn = document.getElementById("tab-upgrades-btn");
+const tabProtectBtn = document.getElementById("tab-protect-btn");
+const tabUpgradesContent = document.getElementById("tab-upgrades");
+const tabProtectContent = document.getElementById("tab-protect");
 
-// --- 初期化 ---
+// モーダル関連
+const zukanGridEl = document.getElementById("zukan-grid");
+const achieveListEl = document.getElementById("achieve-list");
+const effectToggleEl = document.getElementById("effect-toggle");
+
+// --- 4. コンボ関連変数 ---
+let combo = 1;
+let comboTimer = null;
+
+// --- 5. 初期化関数 ---
 function init() {
   loadGame();
   renderUpgrades();
   updateUI();
-  
-  // 自動収穫ループ (100msごとに実行)
+
+  // ループ処理（100msごとに自動収穫＆UI同期）
   setInterval(gameLoop, 100);
-  
-  // 自動セーブ (10秒ごと)
+
+  // 定期セーブ（10秒ごと）
   setInterval(saveGame, 10000);
-  
-  // ニュース更新 (15秒ごと)
+
+  // ニュース更新（15秒ごと）
   setInterval(updateNews, 15000);
 
   setupEventListeners();
 }
 
-// --- イベントリスナー設定 ---
+// --- 6. イベントリスナー登録 ---
 function setupEventListeners() {
-  // きゅうりクリック時
+  // きゅうりクリック（収穫）処理
   clickTargetEl.addEventListener("click", (e) => {
-    gameState.cucumbers += gameState.clickPower;
-    
-    // エフェクト演出
-    createFloatingText(e.clientX, e.clientY, `+${gameState.clickPower}`);
-    triggerKappaBounce();
-    
+    // コンボ計算
+    combo++;
+    if (combo > 1) {
+      comboDisplayEl.classList.remove("hidden");
+      comboCountEl.textContent = combo;
+    }
+    clearTimeout(comboTimer);
+    comboTimer = setTimeout(() => {
+      combo = 1;
+      comboDisplayEl.classList.add("hidden");
+    }, 1200);
+
+    // 獲得量＝クリック力 × コンボ倍率
+    const gain = gameState.clickPower * (1 + (combo - 1) * 0.1);
+    gameState.cucumbers += gain;
+    gameState.totalCucumbers += gain;
+
+    // 演出
+    if (gameState.effectsEnabled) {
+      createFloatingText(e.clientX, e.clientY, `+${Math.floor(gain)}`);
+      triggerKappaBounce();
+    }
+
+    checkAchievements();
     updateUI();
   });
 
-  // 設定モーダル制御
-  settingsBtn.addEventListener("click", () => settingsModal.classList.remove("hidden"));
-  closeSettingsBtn.addEventListener("click", () => settingsModal.classList.add("hidden"));
-  
-  // データリセット
-  resetBtn.addEventListener("click", () => {
-    if (confirm("本当にデータをリセットしますか？保護した河童も野生に戻ります。")) {
-      localStorage.removeItem("kappaProjectSave");
-      location.reload();
+  // 河童の救出ボタン
+  rescueKappaBtn.addEventListener("click", () => {
+    if (gameState.cucumbers >= gameState.rescueCost) {
+      gameState.cucumbers -= gameState.rescueCost;
+      gameState.kappas += 1;
+      
+      // 次の救出コスト増加 (1.25倍)
+      gameState.rescueCost = Math.floor(gameState.rescueCost * 1.25);
+      rescueCostEl.textContent = gameState.rescueCost;
+
+      if (gameState.effectsEnabled) {
+        triggerKappaBounce();
+      }
+
+      checkAchievements();
+      updateUI();
+      saveGame();
     }
   });
 
-  // 他ボタンのダミーイベント（拡張用）
-  document.getElementById("zukan-btn").addEventListener("click", () => alert("河童図鑑機能は今後のアップデートで追加予定です！"));
-  document.getElementById("achieve-btn").addEventListener("click", () => alert("実績機能は今後のアップデートで追加予定です！"));
+  // タブ切り替え
+  tabUpgradesBtn.addEventListener("click", () => {
+    tabUpgradesBtn.classList.add("active");
+    tabProtectBtn.classList.remove("active");
+    tabUpgradesContent.classList.remove("hidden");
+    tabProtectContent.classList.add("hidden");
+  });
+
+  tabProtectBtn.addEventListener("click", () => {
+    tabProtectBtn.classList.add("active");
+    tabUpgradesBtn.classList.remove("active");
+    tabProtectContent.classList.remove("hidden");
+    tabUpgradesContent.classList.add("hidden");
+  });
+
+  // モーダルオープンボタン
+  document.getElementById("zukan-btn").addEventListener("click", () => {
+    renderZukan();
+    openModal("zukan-modal");
+  });
+
+  document.getElementById("achieve-btn").addEventListener("click", () => {
+    renderAchievements();
+    openModal("achieve-modal");
+  });
+
+  document.getElementById("settings-btn").addEventListener("click", () => {
+    openModal("settings-modal");
+  });
+
+  // モーダルクローズボタン（確実動作版に修正）
+  document.querySelectorAll(".close-modal-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      const targetId = e.currentTarget.dataset.target;
+      if (targetId) {
+        closeModal(targetId);
+      }
+    });
+  });
+
+  // モーダル背景クリックでも閉じられる処理
+  document.querySelectorAll(".modal").forEach(modal => {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        closeModal(modal.id);
+      }
+    });
+  });
+
+  // 設定：演出トグル
+  effectToggleEl.addEventListener("change", (e) => {
+    gameState.effectsEnabled = e.target.checked;
+  });
+
+  // 設定：データ手動保存＆リセット
+  document.getElementById("export-save-btn").addEventListener("click", () => {
+    saveGame();
+    alert("ゲームデータを手動保存しました！");
+  });
+
+  document.getElementById("reset-btn").addEventListener("click", () => {
+    if (confirm("本当にデータをリセットしますか？保護した河童も野生に戻ります。")) {
+      localStorage.removeItem("kappaProjectSaveV2");
+      location.reload();
+    }
+  });
 }
 
-// --- ゲームループ (毎秒処理) ---
+// --- 7. ゲームループ (100ms周期) ---
 let lastTick = Date.now();
 function gameLoop() {
   const now = Date.now();
   const delta = (now - lastTick) / 1000;
   lastTick = now;
 
-  // CPSに基づききゅうりを増やす
+  // CPSによる自動収穫
   if (gameState.cps > 0) {
-    gameState.cucumbers += gameState.cps * delta;
+    const autoGain = gameState.cps * delta;
+    gameState.cucumbers += autoGain;
+    gameState.totalCucumbers += autoGain;
+    checkAchievements();
     updateUI();
   }
 }
 
-// --- UI更新 ---
+// --- 8. UI更新 ---
 function updateUI() {
   cucumberCountEl.textContent = Math.floor(gameState.cucumbers).toLocaleString();
   kappaCountEl.textContent = gameState.kappas.toLocaleString();
 
-  // アップグレードボタンの購入可否状態を更新
+  // 設備購入ボタンの活性/非活性
   Object.keys(gameState.upgrades).forEach(id => {
     const item = gameState.upgrades[id];
     const btn = document.getElementById(`buy-${id}`);
@@ -119,41 +252,12 @@ function updateUI() {
       }
     }
   });
+
+  // 救出ボタンの活性/非活性
+  rescueKappaBtn.disabled = gameState.cucumbers < gameState.rescueCost;
 }
 
-// --- 演出関連 ---
-function createFloatingText(x, y, text) {
-  const el = document.createElement("div");
-  el.className = "floating-text";
-  el.textContent = text;
-  
-  // ランダムに少し位置を散らす
-  const offsetX = (Math.random() - 0.5) * 20;
-  el.style.left = `${x + offsetX}px`;
-  el.style.top = `${y - 20}px`;
-
-  document.body.appendChild(el);
-
-  setTimeout(() => el.remove(), 800);
-}
-
-function triggerKappaBounce() {
-  kappaSpriteEl.classList.remove("bounce");
-  // 再描画を発火させてアニメーションを再適用
-  void kappaSpriteEl.offsetWidth;
-  kappaSpriteEl.classList.add("bounce");
-}
-
-function updateNews() {
-  const randomIndex = Math.floor(Math.random() * newsList.length);
-  newsTextEl.textContent = newsList[randomIndex];
-  
-  newsTickerEl.classList.remove("news-slide-in");
-  void newsTickerEl.offsetWidth;
-  newsTickerEl.classList.add("news-slide-in");
-}
-
-// --- アップグレード描画と購入 ---
+// --- 9. 設備・アップグレード処理 ---
 function renderUpgrades() {
   upgradeListEl.innerHTML = "";
   
@@ -175,7 +279,6 @@ function renderUpgrades() {
     `;
 
     upgradeListEl.appendChild(card);
-
     document.getElementById(`buy-${id}`).addEventListener("click", () => buyUpgrade(id));
   });
 }
@@ -185,14 +288,9 @@ function buyUpgrade(id) {
   if (gameState.cucumbers >= item.cost) {
     gameState.cucumbers -= item.cost;
     item.count += 1;
+    item.cost = Math.floor(item.cost * 1.15); // 次回コスト1.15倍
     
-    // 次回のコスト増加（1.15倍）
-    item.cost = Math.floor(item.cost * 1.15);
-    
-    // 全体CPSと河童数の再計算
     recalculateStats();
-    
-    // 描画とUI更新
     renderUpgrades();
     updateUI();
     saveGame();
@@ -201,33 +299,123 @@ function buyUpgrade(id) {
 
 function recalculateStats() {
   let totalCps = 0;
-  let totalKappas = 0;
-
   Object.keys(gameState.upgrades).forEach(id => {
     const item = gameState.upgrades[id];
     totalCps += item.count * item.cps;
-    totalKappas += item.count; // アップグレード数に応じて保護河童が増加
   });
-
   gameState.cps = totalCps;
-  gameState.kappas = totalKappas;
 }
 
-// --- セーブ & ロード ---
+// --- 10. 図鑑モーダル描画 ---
+function renderZukan() {
+  zukanGridEl.innerHTML = "";
+
+  zukanData.forEach(item => {
+    // 保護中の河童数が必要条件を満たしていれば解放
+    const isUnlocked = gameState.kappas >= item.reqKappas;
+
+    const card = document.createElement("div");
+    card.className = `zukan-card ${isUnlocked ? '' : 'locked'}`;
+
+    card.innerHTML = `
+      <span class="icon">${isUnlocked ? item.icon : "❓"}</span>
+      <span class="name">${isUnlocked ? item.name : "？？？"}</span>
+      <p class="desc">${isUnlocked ? item.desc : `必要保護数: ${item.reqKappas}匹`}</p>
+    `;
+
+    zukanGridEl.appendChild(card);
+  });
+}
+
+// --- 11. 実績判定・描画 ---
+function checkAchievements() {
+  achievementsData.forEach(ach => {
+    if (!gameState.unlockedAchievements.includes(ach.id) && ach.check()) {
+      gameState.unlockedAchievements.push(ach.id);
+      showNews(`🏆 実績解除: 【${ach.title}】を達成しました！`);
+    }
+  });
+}
+
+function renderAchievements() {
+  achieveListEl.innerHTML = "";
+
+  achievementsData.forEach(ach => {
+    const isUnlocked = gameState.unlockedAchievements.includes(ach.id);
+
+    const item = document.createElement("div");
+    item.className = `achieve-item ${isUnlocked ? 'unlocked' : ''}`;
+
+    item.innerHTML = `
+      <div class="achieve-icon">${isUnlocked ? ach.icon : "🔒"}</div>
+      <div class="achieve-info">
+        <span class="title">${ach.title} ${isUnlocked ? "✅" : ""}</span>
+        <span class="detail">${ach.desc}</span>
+      </div>
+    `;
+
+    achieveListEl.appendChild(item);
+  });
+}
+
+// --- 12. 演出関連 ---
+function createFloatingText(x, y, text) {
+  const el = document.createElement("div");
+  el.className = "floating-text";
+  el.textContent = text;
+  
+  const offsetX = (Math.random() - 0.5) * 30;
+  el.style.left = `${x + offsetX}px`;
+  el.style.top = `${y - 20}px`;
+
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 800);
+}
+
+function triggerKappaBounce() {
+  kappaSpriteEl.classList.remove("bounce");
+  void kappaSpriteEl.offsetWidth;
+  kappaSpriteEl.classList.add("bounce");
+}
+
+function updateNews() {
+  const randomIndex = Math.floor(Math.random() * newsList.length);
+  showNews(newsList[randomIndex]);
+}
+
+function showNews(text) {
+  newsTextEl.textContent = text;
+  newsTickerEl.classList.remove("news-slide-in");
+  void newsTickerEl.offsetWidth;
+  newsTickerEl.classList.add("news-slide-in");
+}
+
+// --- 13. モーダル操作ヘルパー ---
+function openModal(id) {
+  document.getElementById(id).classList.remove("hidden");
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.add("hidden");
+}
+
+// --- 14. セーブ & ロード ---
 function saveGame() {
-  localStorage.setItem("kappaProjectSave", JSON.stringify(gameState));
+  localStorage.setItem("kappaProjectSaveV2", JSON.stringify(gameState));
 }
 
 function loadGame() {
-  const savedData = localStorage.getItem("kappaProjectSave");
+  const savedData = localStorage.getItem("kappaProjectSaveV2");
   if (savedData) {
     try {
       const parsed = JSON.parse(savedData);
       
-      // データの流し込み
       gameState.cucumbers = parsed.cucumbers || 0;
+      gameState.totalCucumbers = parsed.totalCucumbers || 0;
       gameState.kappas = parsed.kappas || 0;
-      gameState.clickPower = parsed.clickPower || 1;
+      gameState.rescueCost = parsed.rescueCost || 50;
+      gameState.effectsEnabled = parsed.effectsEnabled !== undefined ? parsed.effectsEnabled : true;
+      gameState.unlockedAchievements = parsed.unlockedAchievements || [];
 
       if (parsed.upgrades) {
         Object.keys(parsed.upgrades).forEach(id => {
@@ -238,9 +426,12 @@ function loadGame() {
         });
       }
 
+      rescueCostEl.textContent = gameState.rescueCost;
+      effectToggleEl.checked = gameState.effectsEnabled;
+      
       recalculateStats();
     } catch (e) {
-      console.error("セーブデータの読み込みに失敗しました", e);
+      console.error("セーブデータの読み込み失敗:", e);
     }
   }
 }
