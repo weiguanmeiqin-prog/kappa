@@ -1,5 +1,5 @@
 /**
- * 河童保護プロジェクト v2.0 - 救出コスト固定（インフレ防止）版
+ * 河童保護プロジェクト v2.0 - 図鑑＆実績拡張版
  */
 
 // 1. ゲーム状態
@@ -10,7 +10,8 @@ const gameState = {
   clickPower: 1,
   cps: 0,
   effectsEnabled: true,
-  rescueCost: 50, // 救出コストは50で固定
+  rescueCost: 50, // 救出コストは50固定
+  trapCaughtTotal: 0, // 罠で捕獲した合計数
   
   upgrades: {
     volunteers: { count: 0, cost: 15, cps: 1, name: "ボランティア募集", desc: "河童保護の協力者を呼びかける" },
@@ -29,26 +30,37 @@ const gameState = {
   unlockedAchievements: []
 };
 
-// 2. マスタデータ
+// 2. マスタデータ (図鑑を拡張)
 const zukanData = [
   { id: "normal", name: "ノーマル河童", icon: "🥒🪷", reqKappas: 0, desc: "一般的な河童。きゅうりが大好物。" },
   { id: "volunteer", name: "お手伝い河童", icon: "🧢🥒", reqKappas: 5, desc: "人間のお手伝いをするのが好きな心優しい河童。" },
   { id: "farmer", name: "農家河童", icon: "👨‍🌾🥒", reqKappas: 15, desc: "きゅうり栽培の技術をマスターした職人肌の河童。" },
-  { id: "king", name: "長老河童", icon: "👑🪷", reqKappas: 50, desc: "保護区の長。圧倒的な威厳と経験を併せ持つ。" }
+  { id: "king", name: "長老河童", icon: "👑🪷", reqKappas: 50, desc: "保護区の長。圧倒的な威厳と経験を併せ持つ。" },
+  { id: "ninja", name: "忍者河童", icon: "🥷🥒", reqKappas: 100, desc: "水遁の術を極めた忍びの河童。素早い。" },
+  { id: "cyber", name: "メカ河童", icon: "🤖🪷", reqKappas: 250, desc: "最先端技術でサイボーグ化した超スペック河童。" },
+  { id: "emperor", name: "河童王", icon: "🤴🥒", reqKappas: 500, desc: "全国の河童たちを率いる偉大な王様。" },
+  { id: "god", name: "神河童", icon: "🌟🪷", reqKappas: 1000, desc: "きゅうりの神に選ばれし伝説の全知全能河童。" }
 ];
 
+// 実績を拡張
 const achievementsData = [
   { id: "harvest_100", title: "収穫ビギナー", desc: "通算100本のきゅうりを収穫する", check: () => gameState.totalCucumbers >= 100, icon: "🌱" },
   { id: "harvest_1000", title: "きゅうりマスター", desc: "通算1,000本のきゅうりを収穫する", check: () => gameState.totalCucumbers >= 1000, icon: "🥒" },
+  { id: "harvest_1m", title: "きゅうり帝国", desc: "通算1,000,000本のきゅうりを収穫する", check: () => gameState.totalCucumbers >= 1000000, icon: "🏰" },
   { id: "kappa_1", title: "はじめての保護", desc: "河童を1匹救出・保護する", check: () => gameState.kappas >= 1, icon: "🪷" },
-  { id: "kappa_10", title: "河童の守護者", desc: "河童を10匹保護する", check: () => gameState.kappas >= 10, icon: "🛡️" }
+  { id: "kappa_10", title: "河童の守護者", desc: "河童を10匹保護する", check: () => gameState.kappas >= 10, icon: "🛡️" },
+  { id: "kappa_100", title: "河童のパラダイス", desc: "河童を100匹保護する", check: () => gameState.kappas >= 100, icon: "🏞️" },
+  { id: "kappa_1000", title: "伝説の保護団体", desc: "河童を1,000匹保護する", check: () => gameState.kappas >= 1000, icon: "✨" },
+  { id: "trap_master", title: "罠の達人", desc: "罠で通算10匹以上の河童を捕獲する", check: () => gameState.trapCaughtTotal >= 10, icon: "🪤" }
 ];
 
 const newsList = [
   "【速報】全国で河童の保護活動が本格化しています。",
   "【話題】特製きゅうりの収穫速度が大幅に向上中！",
   "【気象】河童の活動に適した湿潤な天候が続いています。",
-  "【保護区】「もっときゅうりを！」保護された河童たちが元気にアピール。"
+  "【保護区】「もっときゅうりを！」保護された河童たちが元気にアピール。",
+  "【目撃】忍者河童が川面を走っているのが目撃されました。",
+  "【噂】伝説の「神河童」がきゅうり畑に降臨するという都市伝説が流行中。"
 ];
 
 let combo = 1;
@@ -108,15 +120,13 @@ function setupEventListeners() {
     });
   }
 
-  // 河童救出ボタン（コストは50で固定・値上げしない）
+  // 河童救出ボタン（コスト固定）
   const rescueBtn = document.getElementById("rescue-kappa-btn");
   if (rescueBtn) {
     rescueBtn.addEventListener("click", () => {
       if (gameState.cucumbers >= gameState.rescueCost) {
         gameState.cucumbers -= gameState.rescueCost;
         gameState.kappas += 1;
-        
-        // ★値上げ処理を削除しました（常に50本のまま）
 
         const rescueCostEl = document.getElementById("rescue-cost");
         if (rescueCostEl) rescueCostEl.textContent = gameState.rescueCost;
@@ -174,6 +184,7 @@ function setupEventListeners() {
     if (gameState.trap.isReady) {
       const caughtCount = Math.floor(Math.random() * 3) + 1;
       gameState.kappas += caughtCount;
+      gameState.trapCaughtTotal = (gameState.trapCaughtTotal || 0) + caughtCount; // カウント保持
       alert(`🎉 罠に仕掛けたきゅうりにつられて、河童を ${caughtCount} 匹捕獲しました！`);
 
       gameState.trap.isSet = false;
@@ -463,7 +474,8 @@ function loadGame() {
       gameState.cucumbers = parsed.cucumbers || 0;
       gameState.totalCucumbers = parsed.totalCucumbers || 0;
       gameState.kappas = parsed.kappas || 0;
-      gameState.rescueCost = 50; // ロード時も50で固定
+      gameState.rescueCost = 50;
+      gameState.trapCaughtTotal = parsed.trapCaughtTotal || 0;
       gameState.effectsEnabled = parsed.effectsEnabled !== undefined ? parsed.effectsEnabled : true;
       gameState.unlockedAchievements = parsed.unlockedAchievements || [];
 
