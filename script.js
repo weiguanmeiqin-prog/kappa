@@ -460,6 +460,51 @@ function showNews(text) {
   void newsTickerEl.offsetWidth;
   newsTickerEl.classList.add("news-slide-in");
 }
+// --- ゲームループ内でのトラップ状態更新 ---
+function gameLoop() {
+  // ...既存の自動収穫処理...
+
+  // トラップのタイマー監視
+  if (gameState.trap.isSet && !gameState.trap.isReady) {
+    const remaining = Math.max(0, Math.ceil((gameState.trap.endTime - Date.now()) / 1000));
+    
+    if (remaining <= 0) {
+      gameState.trap.isReady = true;
+      updateTrapUI();
+    } else {
+      document.getElementById("trap-timer").textContent = `残り時間: ${remaining}秒`;
+    }
+  }
+}
+
+// トラップ画面のUI描画更新
+function updateTrapUI() {
+  const iconEl = document.getElementById("trap-status-icon");
+  const statusEl = document.getElementById("trap-status-text");
+  const timerEl = document.getElementById("trap-timer");
+  const setBtn = document.getElementById("set-trap-btn");
+  const checkBtn = document.getElementById("check-trap-btn");
+
+  if (!gameState.trap.isSet) {
+    iconEl.textContent = "🧺";
+    statusEl.textContent = "仕掛け準備完了";
+    timerEl.textContent = "仕掛け時間: 30秒";
+    setBtn.classList.remove("hidden");
+    checkBtn.classList.add("hidden");
+    setBtn.disabled = gameState.cucumbers < gameState.trap.cost;
+  } else if (gameState.trap.isSet && !gameState.trap.isReady) {
+    iconEl.textContent = "⏳";
+    statusEl.textContent = "河童を誘き寄せ中...";
+    setBtn.classList.add("hidden");
+    checkBtn.classList.add("hidden");
+  } else if (gameState.trap.isReady) {
+    iconEl.textContent = "🎁";
+    statusEl.textContent = "なにかが罠にかかったようだ！";
+    timerEl.textContent = "回収可能！";
+    setBtn.classList.add("hidden");
+    checkBtn.classList.remove("hidden");
+  }
+}
 
 // --- 13. モーダル操作ヘルパー ---
 function openModal(id) {
